@@ -8,38 +8,43 @@
     <title>Document</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-</head>
-<body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<form method="POST" class="container mt-4">
+  </head>
+<body>
+<form method="POST" class="container">
   {% csrf_token %}
   <div class="row">
     <div class="col-md-6">
       <div class="card p-4 shadow-sm">
         <h4 class="mb-2 text-center fw-bold">Choose Your Food</h4>
         <div class="mb-3">
-          <label for="food_option" class="form-label fw-bold">Select Food:</label>
+          <label for="food_option" class="form-label fw-bold">select Food:</label> 
           <select name="food_option" id="food_option" class="form-select form-control-lg">
             {% for food in foods %}
               <option value="{{ food.food }}">{{ food.food }}</option>
             {% endfor %}
           </select>
         </div>
+        
         <div class="d-grid">
-          <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+          <button type="submit" class="btn btn-primary btn-lg">submit</button>
         </div>
       </div>
     </div>
 
+    
     <div>
+<a href="{% url 'user:logout' %}" class="btn btn-danger offset-10 d-grid mb-4">Logout</a>    
+    
     <table class="table col-md-6" id="table">
     <thead>
         <tr>
-        <th scope="col">Food Item</th>
+        <th scope="col">Food item</th>
         <th scope="col">Fat</th>
         <th scope="col">Carbs</th>
+        <th scope="col">protein</th>
         <th scope="col">Calorie</th>
-        <th scope="col">Protein</th>
         <th scope="col">Delete</th>
         </tr>
     </thead>
@@ -49,42 +54,163 @@
         <th style="font-weight: 400;">{{ con.food_consumed.food }}</th>
         <td>{{ con.food_consumed.fat }}</td>
         <td>{{ con.food_consumed.carbs }}</td>
-        <td>{{ con.food_consumed.calorie }}</td>
         <td>{{ con.food_consumed.protein }}</td>
+        <td>{{ con.food_consumed.calorie }}</td>
+        <td> <a class="btn btn-danger" href="{% url 'tracker:delete_item' con.id %}">Delete</a>
         </tr>
         {% endfor %}
         <th id="total">Total</th>
         <td id="tfat"></td>
         <td id="tcarbs"></td>
-        <td id="tcalorie"></td>
         <td id="tprotein"></td>
+        <td id="tcalorie"></td>
     </tbody>
     </table>
     <div>
   </div>
 </form>
 
+  <label  class="form-label fw-bold mt-4">Your progress:</label><br>
+  Carbs: 
+  <div class="progress" style="height: 50px;">
+    <div class="progress-bar  progress-bar-striped" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" id="myFat" style="width: 0%"><span id="myFat2"></span></div>
+  </div>
+    Fat: 
+  <div class="progress" style="height: 50px;">
+    <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" id="myCarbs" style="width: 0%;"><span id="myCarbs2"></span></div>
+  </div>
+    protein: 
+  <div class="progress" style="height: 50px;">
+    <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" id="myProtein" style="width: 0%;"><span id="myProtein2"></span></div>
+  </div>
+    Calorie: 
+  <div class="progress" style="height: 50px;">
+    <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" id="myCalorie" style="width: 0%;"><span id="myCalorie2"></span></div>
+  </div>
+
+  <div>
+    <canvas id="myChart"></canvas>
+  </div>  
+  <div class="mt-5" style="height: 600px; width: 600px;">
+    <canvas id="myChart2" ></canvas>
+  </div>
 </body>
 <script>
-    var table = document.getElementById("table");
-    var fat=0, carbs = 0, calorie = 0, protein = 0; 
+  const table = document.getElementById("table");
 
-    for(var i=1; i<table.rows.length-1; i++){
-        var row = table.rows[i];
-        fat += Math.round(parseFloat(row.cells[1].innerHTML));
-        carbs += Math.round(parseFloat(row.cells[2].innerHTML));
-        calorie += Math.round(parseFloat(row.cells[3].innerHTML));
-        protein += Math.round(parseFloat(row.cells[4].innerHTML));
-    }
-    console.log(`fat ${fat}`);
-    console.log(`carbs ${carbs}`);
-    console.log(`calorie ${calorie}`);
-    console.log(`protein ${protein}`);
+  let fat = 0,
+      carbs = 0,
+      calorie = 0,
+      protein = 0;
 
-    document.getElementById("tfat").innerHTML = fat;
-    document.getElementById("tcarbs").innerHTML = carbs;
-    document.getElementById("tcalorie").innerHTML = calorie;
-    document.getElementById("tprotein").innerHTML = protein;
+  // Sum table values
+  for (let i = 1; i < table.rows.length - 1; i++) {
+    const row = table.rows[i];
+
+    fat += parseFloat(row.cells[1].innerText) || 0;
+    carbs += parseFloat(row.cells[2].innerText) || 0;
+    protein += parseFloat(row.cells[3].innerText) || 0;
+    calorie += parseFloat(row.cells[4].innerText) || 0;
+  }
+
+  // Round totals
+  fat = Math.round(fat);
+  carbs = Math.round(carbs);
+  calorie = Math.round(calorie);
+  protein = Math.round(protein); 
+
+  // Display totals
+  document.getElementById("tfat").innerText = fat+" gm";
+  document.getElementById("tcarbs").innerText = carbs+" gm";
+  document.getElementById("tprotein").innerText = protein+" gm";
+  document.getElementById("tcalorie").innerText = calorie+" kcal";
+
+
+  // =========================
+  // MACRO GOAL LOGIC
+  // =========================
+
+  const totalCalories = 2000;
+
+  // Macro percentages
+  const carbPercent = 0.40;
+  const proteinPercent = 0.30;
+  const fatPercent = 0.30;
+
+  // Calculate goals from calories
+  const goalcarbs = Math.round((totalCalories * carbPercent) / 4);
+  const goalprotein = Math.round((totalCalories * proteinPercent) / 4);
+  const goalfat = Math.round((totalCalories * fatPercent) / 9);
+  const goalcalorie = totalCalories;
+
+  // Progress Calculate
+
+  const fatProgress = Math.min((fat / goalfat) * 100, 100);
+  const carbsProgress = Math.min((carbs / goalcarbs) * 100, 100);
+  const calorieProgress = Math.min((calorie / goalcalorie) * 100, 100);
+  const proteinProgress = Math.min((protein / goalprotein) * 100, 100);
+
+  // For progress bars
+
+  document.getElementById("myFat").style.width = `${fatProgress}%`;
+  document.getElementById("myCarbs").style.width = `${carbsProgress}%`;
+  document.getElementById("myCalorie").style.width = `${calorieProgress}%`;
+  document.getElementById("myProtein").style.width = `${proteinProgress}%`;
+
+  // Update percentage labels
+
+  document.getElementById("myFat2").innerText = `${Math.round(fatProgress)}%`;
+  document.getElementById("myCarbs2").innerText = `${Math.round(carbsProgress)}%`;
+  document.getElementById("myCalorie2").innerText = `${Math.round(calorieProgress)}%`;
+  document.getElementById("myProtein2").innerText = `${Math.round(proteinProgress)}%`;
+
+  // Optional console logs
+  console.log({
+    fat,
+    carbs,
+    calorie,
+    protein,
+    goalfat,
+    goalcarbs,
+    goalprotein,
+    goalcalorie
+  });
+
+
+
+  const ctx = document.getElementById('myChart');
+  const ctx2 = document.getElementById('myChart2');
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Fat', 'Carb', 'Protein'],
+      datasets: [{
+        label: 'Data',
+        data: [carbsProgress, fatProgress, proteinProgress],
+        borderWidth: 1
+      }]
+    },
+  });
+
+  new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+      labels: ['Fat', 'Carb', 'Protein'],
+      datasets: [{
+        label: 'Data',
+        data: [carbsProgress, fatProgress, proteinProgress],
+        borderWidth: 1
+      }]
+    },
+  });
+
+
+
+
+
+
+
+
 </script>
-
 </html>

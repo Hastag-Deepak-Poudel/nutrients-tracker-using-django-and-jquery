@@ -24,3 +24,7 @@ class FoodConsumed(models.Model):
         verbose_name = "Food Consumed"
         verbose_name_plural = "Foods Consumed"
     
+    def __str__(self):
+        return self.food_consumed.food
+    
+    
