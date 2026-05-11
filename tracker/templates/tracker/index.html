@@ -1,0 +1,90 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<form method="POST" class="container mt-4">
+  {% csrf_token %}
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card p-4 shadow-sm">
+        <h4 class="mb-2 text-center fw-bold">Choose Your Food</h4>
+        <div class="mb-3">
+          <label for="food_option" class="form-label fw-bold">Select Food:</label>
+          <select name="food_option" id="food_option" class="form-select form-control-lg">
+            {% for food in foods %}
+              <option value="{{ food.food }}">{{ food.food }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+    <table class="table col-md-6" id="table">
+    <thead>
+        <tr>
+        <th scope="col">Food Item</th>
+        <th scope="col">Fat</th>
+        <th scope="col">Carbs</th>
+        <th scope="col">Calorie</th>
+        <th scope="col">Protein</th>
+        <th scope="col">Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for con in consumed %}
+        <tr>
+        <th style="font-weight: 400;">{{ con.food_consumed.food }}</th>
+        <td>{{ con.food_consumed.fat }}</td>
+        <td>{{ con.food_consumed.carbs }}</td>
+        <td>{{ con.food_consumed.calorie }}</td>
+        <td>{{ con.food_consumed.protein }}</td>
+        </tr>
+        {% endfor %}
+        <th id="total">Total</th>
+        <td id="tfat"></td>
+        <td id="tcarbs"></td>
+        <td id="tcalorie"></td>
+        <td id="tprotein"></td>
+    </tbody>
+    </table>
+    <div>
+  </div>
+</form>
+
+</body>
+<script>
+    var table = document.getElementById("table");
+    var fat=0, carbs = 0, calorie = 0, protein = 0; 
+
+    for(var i=1; i<table.rows.length-1; i++){
+        var row = table.rows[i];
+        fat += Math.round(parseFloat(row.cells[1].innerHTML));
+        carbs += Math.round(parseFloat(row.cells[2].innerHTML));
+        calorie += Math.round(parseFloat(row.cells[3].innerHTML));
+        protein += Math.round(parseFloat(row.cells[4].innerHTML));
+    }
+    console.log(`fat ${fat}`);
+    console.log(`carbs ${carbs}`);
+    console.log(`calorie ${calorie}`);
+    console.log(`protein ${protein}`);
+
+    document.getElementById("tfat").innerHTML = fat;
+    document.getElementById("tcarbs").innerHTML = carbs;
+    document.getElementById("tcalorie").innerHTML = calorie;
+    document.getElementById("tprotein").innerHTML = protein;
+</script>
+
+</html>
